@@ -40,6 +40,8 @@ export { TL_CURSOR_TYPES, type TLCursor, type TLCursorType } from './misc/TLCurs
 export { TL_HANDLE_TYPES, type TLHandle, type TLHandleType } from './misc/TLHandle'
 export { opacityValidator, type TLOpacityType } from './misc/TLOpacity'
 export { TL_SCRIBBLE_STATES, scribbleValidator, type TLScribble } from './misc/TLScribble'
+export { strokeColorValidator, type TLStrokeColorType } from './misc/TLStrokeColor'
+export { strokeWidthValidator, type TLStrokeWidthType } from './misc/TLStrokeWidth'
 export {
 	boxModelValidator,
 	vecModelValidator,

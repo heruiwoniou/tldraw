@@ -1074,6 +1074,8 @@ export class Editor extends EventEmitter<TLEventMap> {
     // (undocumented)
     getShapeUtil<T extends ShapeUtil>(type: T extends ShapeUtil<infer R> ? R['type'] : string): T;
     getSharedOpacity(): SharedStyle<number>;
+    getSharedStrokeColor(): SharedStyle<string>;
+    getSharedStrokeWidth(): SharedStyle<number>;
     getSharedStyles(): ReadonlySharedStyleMap;
     // (undocumented)
     getSnapshot(): TLEditorSnapshot;
@@ -1238,6 +1240,10 @@ export class Editor extends EventEmitter<TLEventMap> {
     setSelectedShapes(shapes: TLShape[] | TLShapeId[]): this;
     // @internal (undocumented)
     _setShiftKeyTimeout(): void;
+    setStrokeColorForNextDrawShapes(strokeColor: string, historyOptions?: TLHistoryBatchOptions): this;
+    setStrokeColorForSelectedDrawShapes(stroke: string): this;
+    setStrokeWidthForNextDrawShapes(strokeWidth: number, historyOptions?: TLHistoryBatchOptions): this;
+    setStrokeWidthForSelectedDrawShapes(strokeWidth: number): this;
     setStyleForNextShapes<T>(style: StyleProp<T>, value: T, historyOptions?: TLHistoryBatchOptions): this;
     setStyleForSelectedShapes<S extends StyleProp<any>>(style: S, value: StylePropValue<S>): this;
     shapeUtils: {

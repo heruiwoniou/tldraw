@@ -12,6 +12,8 @@ import { idValidator } from '../misc/id-validator'
 import { cursorValidator, TLCursor } from '../misc/TLCursor'
 import { opacityValidator, TLOpacityType } from '../misc/TLOpacity'
 import { scribbleValidator, TLScribble } from '../misc/TLScribble'
+import { strokeColorValidator, TLStrokeColorType } from '../misc/TLStrokeColor'
+import { strokeWidthValidator, TLStrokeWidthType } from '../misc/TLStrokeWidth'
 import { StyleProp } from '../styles/StyleProp'
 import { pageIdValidator, TLPageId } from './TLPage'
 import { TLShapeId } from './TLShape'
@@ -26,6 +28,8 @@ import { TLShapeId } from './TLShape'
 export interface TLInstance extends BaseRecord<'instance', TLInstanceId> {
 	currentPageId: TLPageId
 	opacityForNextShape: TLOpacityType
+	strokeWidthForNextDrawShape: TLStrokeWidthType
+	strokeColorForNextDrawShape: TLStrokeColorType
 	stylesForNextShape: Record<string, unknown>
 	followingUserId: string | null
 	highlightedUserIds: string[]
@@ -77,6 +81,8 @@ export const shouldKeyBePreservedBetweenSessions = {
 
 	currentPageId: false, // does not preserve because who knows if the page still exists
 	opacityForNextShape: false, // does not preserve because it's a temporary state
+	strokeWidthForNextDrawShape: false, // does not preserve because it's a temporary state
+	strokeColorForNextDrawShape: false, // does not preserve because it's a temporary state
 	stylesForNextShape: false, // does not preserve because it's a temporary state
 	followingUserId: false, // does not preserve because it's a temporary state
 	highlightedUserIds: false, // does not preserve because it's a temporary state
@@ -138,6 +144,8 @@ export function createInstanceRecordType(stylesById: Map<string, StyleProp<unkno
 			followingUserId: T.string.nullable(),
 			brush: boxModelValidator.nullable(),
 			opacityForNextShape: opacityValidator,
+			strokeWidthForNextDrawShape: strokeWidthValidator,
+			strokeColorForNextDrawShape: strokeColorValidator,
 			stylesForNextShape: T.object(stylesForNextShapeValidators),
 			cursor: cursorValidator,
 			scribbles: T.arrayOf(scribbleValidator),
@@ -180,6 +188,8 @@ export function createInstanceRecordType(stylesById: Map<string, StyleProp<unkno
 
 			followingUserId: true,
 			opacityForNextShape: true,
+			strokeWidthForNextDrawShape: true,
+			strokeColorForNextDrawShape: true,
 			stylesForNextShape: true,
 			brush: true,
 			cursor: true,
@@ -209,6 +219,8 @@ export function createInstanceRecordType(stylesById: Map<string, StyleProp<unkno
 		(): Omit<TLInstance, 'typeName' | 'id' | 'currentPageId'> => ({
 			followingUserId: null,
 			opacityForNextShape: 1,
+			strokeWidthForNextDrawShape: 1,
+			strokeColorForNextDrawShape: '#000000',
 			stylesForNextShape: {},
 			brush: null,
 			scribbles: [],

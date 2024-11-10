@@ -543,6 +543,12 @@ export type SetValue<T extends Set<any>> = T extends Set<infer U> ? U : never;
 // @public (undocumented)
 export const shapeIdValidator: T.Validator<TLShapeId>;
 
+// @public (undocumented)
+export const strokeColorValidator: T.Validator<string>;
+
+// @public (undocumented)
+export const strokeWidthValidator: T.Validator<number>;
+
 // @public
 export class StyleProp<Type> implements T.Validatable<Type> {
     // @internal
@@ -907,6 +913,10 @@ export interface TLDrawShapeProps {
     segments: TLDrawShapeSegment[];
     // (undocumented)
     size: TLDefaultSizeStyle;
+    // (undocumented)
+    stroke?: TLStrokeColorType;
+    // (undocumented)
+    strokeWidth?: TLStrokeWidthType;
 }
 
 // @public (undocumented)
@@ -1127,6 +1137,10 @@ export interface TLInstance extends BaseRecord<'instance', TLInstanceId> {
     screenBounds: BoxModel;
     // (undocumented)
     scribbles: TLScribble[];
+    // (undocumented)
+    strokeColorForNextDrawShape: TLStrokeColorType;
+    // (undocumented)
+    strokeWidthForNextDrawShape: TLStrokeWidthType;
     // (undocumented)
     stylesForNextShape: Record<string, unknown>;
     // (undocumented)
@@ -1395,6 +1409,12 @@ export type TLStoreSchema = StoreSchema<TLRecord, TLStoreProps>;
 
 // @public (undocumented)
 export type TLStoreSnapshot = StoreSnapshot<TLRecord>;
+
+// @public (undocumented)
+export type TLStrokeColorType = string;
+
+// @public (undocumented)
+export type TLStrokeWidthType = number;
 
 // @public (undocumented)
 export type TLTextShape = TLBaseShape<'text', TLTextShapeProps>;

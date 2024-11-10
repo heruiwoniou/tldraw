@@ -1,4 +1,6 @@
 import { T } from '@tldraw/validate'
+import { TLStrokeColorType, strokeColorValidator } from '../misc/TLStrokeColor'
+import { TLStrokeWidthType, strokeWidthValidator } from '../misc/TLStrokeWidth'
 import { VecModel, vecModelValidator } from '../misc/geometry-types'
 import { createShapePropsMigrationIds, createShapePropsMigrationSequence } from '../records/TLShape'
 import { RecordProps } from '../recordsWithProps'
@@ -26,6 +28,8 @@ export interface TLDrawShapeProps {
 	fill: TLDefaultFillStyle
 	dash: TLDefaultDashStyle
 	size: TLDefaultSizeStyle
+	strokeWidth?: TLStrokeWidthType
+	stroke?: TLStrokeColorType
 	segments: TLDrawShapeSegment[]
 	isComplete: boolean
 	isClosed: boolean
@@ -42,6 +46,8 @@ export const drawShapeProps: RecordProps<TLDrawShape> = {
 	fill: DefaultFillStyle,
 	dash: DefaultDashStyle,
 	size: DefaultSizeStyle,
+	strokeWidth: strokeWidthValidator.optional(),
+	stroke: strokeColorValidator.optional(),
 	segments: T.arrayOf(DrawShapeSegment),
 	isComplete: T.boolean,
 	isClosed: T.boolean,

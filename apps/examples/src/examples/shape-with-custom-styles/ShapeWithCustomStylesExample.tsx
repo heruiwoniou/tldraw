@@ -1,105 +1,60 @@
 import {
-	BaseBoxShapeUtil,
 	DefaultStylePanel,
 	DefaultStylePanelContent,
-	HTMLContainer,
-	StyleProp,
-	T,
-	TLBaseShape,
 	Tldraw,
 	useEditor,
 	useRelevantStyles,
+	useValue,
 } from 'tldraw'
 import 'tldraw/tldraw.css'
-
-// [1]
-const myRatingStyle = StyleProp.defineEnum('example:rating', {
-	defaultValue: 1,
-	values: [1, 2, 3, 4, 5],
-})
-
-// [2]
-type MyRatingStyle = T.TypeOf<typeof myRatingStyle>
-
-type IMyShape = TLBaseShape<
-	'myshape',
-	{
-		w: number
-		h: number
-		rating: MyRatingStyle
-	}
->
-
-class MyShapeUtil extends BaseBoxShapeUtil<IMyShape> {
-	static override type = 'myshape' as const
-
-	// [3]
-	static override props = {
-		w: T.number,
-		h: T.number,
-		rating: myRatingStyle,
-	}
-
-	getDefaultProps(): IMyShape['props'] {
-		return {
-			w: 300,
-			h: 300,
-			rating: 4, // [4]
-		}
-	}
-
-	component(shape: IMyShape) {
-		// [5]
-		const stars = ['☆', '☆', '☆', '☆', '☆']
-		for (let i = 0; i < shape.props.rating; i++) {
-			stars[i] = '★'
-		}
-
-		return (
-			<HTMLContainer
-				id={shape.id}
-				style={{ backgroundColor: 'var(--color-low-border)', overflow: 'hidden' }}
-			>
-				{stars}
-			</HTMLContainer>
-		)
-	}
-
-	indicator(shape: IMyShape) {
-		return <rect width={shape.props.w} height={shape.props.h} />
-	}
-}
 
 // [6]
 function CustomStylePanel() {
 	const editor = useEditor()
 	const styles = useRelevantStyles()
-	if (!styles) return null
+	const strokeWidth = useValue('strokeWidth', () => editor.getSharedStrokeWidth(), [editor])
 
-	const rating = styles.get(myRatingStyle)
+	const stroke = useValue('stroke', () => editor.getSharedStrokeColor(), [editor])
+
+	const isDraw = editor.getSelectedShapes().some((shape) => shape.type === 'draw')
+	const isDrawing = editor.isIn('draw')
+
+	if (!styles) return null
 
 	return (
 		<DefaultStylePanel>
 			<DefaultStylePanelContent styles={styles} />
-			{rating !== undefined && (
-				<div>
-					<select
-						style={{ width: '100%', padding: 4 }}
-						value={rating.type === 'mixed' ? '' : rating.value}
+			{(isDraw || isDrawing) && (
+				<>
+					<input
+						type="range"
+						min={1}
+						max={200}
+						value={strokeWidth.type === 'shared' ? strokeWidth.value : 1}
 						onChange={(e) => {
-							editor.markHistoryStoppingPoint()
-							const value = myRatingStyle.validate(+e.currentTarget.value)
-							editor.setStyleForSelectedShapes(myRatingStyle, value)
+							editor.run(() => {
+								if (editor.isIn('select')) {
+									editor.setStrokeWidthForSelectedDrawShapes(+e.currentTarget.value)
+								}
+								editor.setStrokeWidthForNextDrawShapes(+e.currentTarget.value)
+								editor.updateInstanceState({ isChangingStyle: true })
+							})
 						}}
-					>
-						{rating.type === 'mixed' ? <option value="">Mixed</option> : null}
-						<option value={1}>1</option>
-						<option value={2}>2</option>
-						<option value={3}>3</option>
-						<option value={4}>4</option>
-						<option value={5}>5</option>
-					</select>
-				</div>
+					/>
+					<input
+						type="color"
+						value={stroke.type === 'shared' ? stroke.value : '#000000'}
+						onChange={(e) => {
+							editor.run(() => {
+								if (editor.isIn('select')) {
+									editor.setStrokeColorForSelectedDrawShapes(e.currentTarget.value)
+								}
+								editor.setStrokeColorForNextDrawShapes(e.currentTarget.value)
+								editor.updateInstanceState({ isChangingStyle: true })
+							})
+						}}
+					/>
+				</>
 			)}
 		</DefaultStylePanel>
 	)
@@ -109,15 +64,8 @@ export default function ShapeWithTldrawStylesExample() {
 	return (
 		<div className="tldraw__editor">
 			<Tldraw
-				// [7]
-				shapeUtils={[MyShapeUtil]}
 				components={{
 					StylePanel: CustomStylePanel,
-				}}
-				onMount={(editor) => {
-					editor.createShape({ type: 'myshape', x: 100, y: 100 })
-					editor.selectAll()
-					editor.createShape({ type: 'myshape', x: 450, y: 250, props: { rating: 5 } })
 				}}
 			/>
 		</div>

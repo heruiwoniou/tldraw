@@ -148,7 +148,9 @@ export async function pasteExcalidrawContent(editor: Editor, clipboard: any, poi
 					type: 'draw',
 					props: {
 						dash: getDash(element),
-						size: strokeWidthsToSizes[element.strokeWidth],
+						size: strokeWidthsToSizes[element.strokeWidth] ?? 'draw',
+						strokeWidth: element.strokeWidth,
+						stroke: element.stroke ?? element.strokeColor ?? '#000000',
 						color: colorsToColors[element.strokeColor] ?? 'black',
 						segments: [
 							{

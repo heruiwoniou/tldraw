@@ -26,6 +26,7 @@ import {
 	TLCursorType,
 	TLDOCUMENT_ID,
 	TLDocument,
+	TLDrawShape,
 	TLFrameShape,
 	TLGeoShape,
 	TLGroupShape,
@@ -7075,7 +7076,8 @@ export class Editor extends EventEmitter<TLEventMap> {
 
 			const shapeRecordsToCreate: TLShape[] = []
 
-			const { opacityForNextShape } = this.getInstanceState()
+			const { opacityForNextShape, strokeWidthForNextDrawShape, strokeColorForNextDrawShape } =
+				this.getInstanceState()
 
 			for (const partial of partials) {
 				const util = this.getShapeUtil(partial as TLShapePartial)
@@ -7122,7 +7124,23 @@ export class Editor extends EventEmitter<TLEventMap> {
 					index,
 					opacity: partial.opacity ?? opacityForNextShape,
 					parentId: partial.parentId ?? focusedGroupId,
-					props: 'props' in partial ? { ...initialProps, ...partial.props } : initialProps,
+					props:
+						'props' in partial
+							? {
+									...initialProps,
+									...partial.props,
+									...(partial.type === 'draw'
+										? {
+												...(strokeWidthForNextDrawShape
+													? { strokeWidth: strokeWidthForNextDrawShape }
+													: {}),
+												...(strokeColorForNextDrawShape
+													? { stroke: strokeColorForNextDrawShape }
+													: {}),
+											}
+										: {}),
+								}
+							: initialProps,
 				})
 
 				if (shapeRecordToCreate.index === undefined) {
@@ -7756,6 +7774,96 @@ export class Editor extends EventEmitter<TLEventMap> {
 	}
 
 	/**
+	 * Get the currently selected shared strokeWidth.
+	 * If any shapes are selected, this returns the shared strokeWidth of the selected shapes.
+	 * Otherwise, this returns the chosen strokeWidth for the next shape.
+	 *
+	 * @public
+	 */
+	@computed getSharedStrokeWidth(): SharedStyle<number> {
+		if (
+			this.isIn('select') &&
+			this.getSelectedShapeIds().filter((id) => this.getShape(id)?.type === 'draw').length > 0
+		) {
+			const shapesToCheck: TLDrawShape[] = []
+			const addShape = (shapeId: TLShapeId) => {
+				const shape = this.getShape(shapeId)
+				if (!shape) return
+				// For groups, ignore the opacity of the group shape and instead include
+				// the opacity of the group's children. These are the shapes that would have
+				// their opacity changed if the user called `setOpacity` on the current selection.
+				if (this.isShapeOfType<TLGroupShape>(shape, 'group')) {
+					for (const childId of this.getSortedChildIdsForParent(shape.id)) {
+						addShape(childId)
+					}
+				} else {
+					shapesToCheck.push(shape as TLDrawShape)
+				}
+			}
+			for (const shapeId of this.getSelectedShapeIds()) {
+				addShape(shapeId)
+			}
+
+			let strokeWidth: number | null = null
+			for (const shape of shapesToCheck) {
+				if (strokeWidth === null) {
+					strokeWidth = shape.props.strokeWidth ?? null
+				} else if (strokeWidth !== shape.props.strokeWidth) {
+					return { type: 'mixed' }
+				}
+			}
+
+			if (strokeWidth !== null) return { type: 'shared', value: strokeWidth }
+		}
+		return { type: 'shared', value: this.getInstanceState().strokeWidthForNextDrawShape }
+	}
+
+	/**
+	 * Get the currently selected shared strokeColor.
+	 * If any shapes are selected, this returns the shared strokeColor of the selected shapes.
+	 * Otherwise, this returns the chosen strokeColor for the next shape.
+	 *
+	 * @public
+	 */
+	@computed getSharedStrokeColor(): SharedStyle<string> {
+		if (
+			this.isIn('select') &&
+			this.getSelectedShapeIds().filter((id) => this.getShape(id)?.type === 'draw').length > 0
+		) {
+			const shapesToCheck: TLDrawShape[] = []
+			const addShape = (shapeId: TLShapeId) => {
+				const shape = this.getShape(shapeId)
+				if (!shape) return
+				// For groups, ignore the opacity of the group shape and instead include
+				// the opacity of the group's children. These are the shapes that would have
+				// their opacity changed if the user called `setOpacity` on the current selection.
+				if (this.isShapeOfType<TLGroupShape>(shape, 'group')) {
+					for (const childId of this.getSortedChildIdsForParent(shape.id)) {
+						addShape(childId)
+					}
+				} else {
+					shapesToCheck.push(shape as TLDrawShape)
+				}
+			}
+			for (const shapeId of this.getSelectedShapeIds()) {
+				addShape(shapeId)
+			}
+
+			let stroke: string | null = null
+			for (const shape of shapesToCheck) {
+				if (stroke === null) {
+					stroke = shape.props.stroke ?? null
+				} else if (stroke !== shape.props.stroke) {
+					return { type: 'mixed' }
+				}
+			}
+
+			if (stroke !== null) return { type: 'shared', value: stroke }
+		}
+		return { type: 'shared', value: this.getInstanceState().strokeColorForNextDrawShape }
+	}
+
+	/**
 	 * Set the opacity for the next shapes. This will effect subsequently created shapes.
 	 *
 	 * @example
@@ -7768,6 +7876,41 @@ export class Editor extends EventEmitter<TLEventMap> {
 	 */
 	setOpacityForNextShapes(opacity: number, historyOptions?: TLHistoryBatchOptions): this {
 		this.updateInstanceState({ opacityForNextShape: opacity }, historyOptions)
+		return this
+	}
+
+	/**
+	 * Set the strokeWidth for the next drawshape shapes. This will effect subsequently created shapes.
+	 *
+	 * @example
+	 * ```ts
+	 * editor.setStrokeWidthForNextDrawShapes(20)
+	 * ```
+	 *
+	 * @param strokeWidth - The strokeWidth to set. Must be a number between 1 and 200 inclusive.
+	 * @param historyOptions - The history options for the change.
+	 */
+	setStrokeWidthForNextDrawShapes(
+		strokeWidth: number,
+		historyOptions?: TLHistoryBatchOptions
+	): this {
+		this.updateInstanceState({ strokeWidthForNextDrawShape: strokeWidth }, historyOptions)
+		return this
+	}
+
+	/**
+	 * Set the strokeColor for the next drawshape shapes. This will effect subsequently created shapes.
+	 *
+	 * @example
+	 * ```ts
+	 * editor.setStrokeColorForNextDrawShapes('#112233')
+	 * ```
+	 */
+	setStrokeColorForNextDrawShapes(
+		strokeColor: string,
+		historyOptions?: TLHistoryBatchOptions
+	): this {
+		this.updateInstanceState({ strokeColorForNextDrawShape: strokeColor }, historyOptions)
 		return this
 	}
 
@@ -7815,6 +7958,52 @@ export class Editor extends EventEmitter<TLEventMap> {
 			)
 		}
 
+		return this
+	}
+
+	/**
+	 * Set the current drawshape strokeWidth. This will effect any selected shapes.
+	 *
+	 * @example
+	 * ```ts
+	 * editor.setStrokeWidthForSelectedDrawShapes(20)
+	 * ```
+	 *
+	 * @param strokeWidth - The strokeWidth to set. Must be a number between 1 and 200 inclusive.
+	 */
+	setStrokeWidthForSelectedDrawShapes(strokeWidth: number): this {
+		const selectedShapes = this.getSelectedShapes().filter((shape) => shape.type === 'draw')
+		if (selectedShapes.length > 0) {
+			this.updateShapes(
+				selectedShapes.map((shape) => ({
+					id: shape.id,
+					type: shape.type,
+					props: { strokeWidth },
+				}))
+			)
+		}
+		return this
+	}
+
+	/**
+	 * Set the strokeColor for the next drawshape shapes. This will effect subsequently created shapes.
+	 *
+	 * @example
+	 * ```ts
+	 * editor.setStrokeColorForNextDrawShapes('#112233')
+	 * ```
+	 */
+	setStrokeColorForSelectedDrawShapes(stroke: string): this {
+		const selectedShapes = this.getSelectedShapes().filter((shape) => shape.type === 'draw')
+		if (selectedShapes.length > 0) {
+			this.updateShapes(
+				selectedShapes.map((shape) => ({
+					id: shape.id,
+					type: shape.type,
+					props: { stroke },
+				}))
+			)
+		}
 		return this
 	}
 
