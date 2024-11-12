@@ -7887,7 +7887,7 @@ export class Editor extends EventEmitter<TLEventMap> {
 	 * editor.setStrokeWidthForNextDrawShapes(20)
 	 * ```
 	 *
-	 * @param strokeWidth - The strokeWidth to set. Must be a number between 1 and 200 inclusive.
+	 * @param strokeWidth - The strokeWidth to set. Must be a number between 0.25 and 200 inclusive.
 	 * @param historyOptions - The history options for the change.
 	 */
 	setStrokeWidthForNextDrawShapes(

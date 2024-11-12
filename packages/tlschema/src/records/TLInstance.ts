@@ -219,7 +219,7 @@ export function createInstanceRecordType(stylesById: Map<string, StyleProp<unkno
 		(): Omit<TLInstance, 'typeName' | 'id' | 'currentPageId'> => ({
 			followingUserId: null,
 			opacityForNextShape: 1,
-			strokeWidthForNextDrawShape: 1,
+			strokeWidthForNextDrawShape: 0.5,
 			strokeColorForNextDrawShape: '#000000',
 			stylesForNextShape: {},
 			brush: null,
